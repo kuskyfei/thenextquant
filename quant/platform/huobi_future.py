@@ -702,6 +702,7 @@ class HuobiFutureTrade:
             order.remain = 0
         elif status in [5, 7]:
             order.status = ORDER_STATUS_CANCELED
+            order.remain = int(order.quantity) - int(order_info["trade_volume"])
         else:
             return
 

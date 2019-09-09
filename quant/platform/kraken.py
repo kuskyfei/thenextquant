@@ -549,6 +549,10 @@ class KrakenTrade:
             status_updated = True
         elif state == "canceled":
             order.status = ORDER_STATUS_CANCELED
+            vol_exec = float(order_info["vol_exec"])
+            remain = float(order.quantity) - vol_exec
+            if order.remain != remain:
+                order.remain = remain
             status_updated = True
         elif state == 'expired':
             order.status = ORDER_STATUS_FAILED
