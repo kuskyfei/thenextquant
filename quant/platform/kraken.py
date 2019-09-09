@@ -531,7 +531,7 @@ class KrakenTrade:
                 order.status = ORDER_STATUS_SUBMITTED
                 status_updated = True
         elif state == "open":
-            vol_exec = float(order_info['vol_exec'])
+            vol_exec = float(order_info["vol_exec"])
             if vol_exec == 0:
                 state = ORDER_STATUS_SUBMITTED
                 if order.status != state:
