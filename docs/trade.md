@@ -82,7 +82,7 @@ trader = Trade(strategy_name, platform, symbol, account=account, access_key=acce
 - 如果需要实时获取到账户的资产变化情况，那么可以在初始化的时候指定资产更新回调函数
 ```python
 
-# 当委托资产有任何变化，将通过此函数回调变化信息，asset为资产对象(注意: 因为资产可能变化频繁，所以一般10秒钟推送一次更新回调)
+# 当资产有任何变化，将通过此函数回调变化信息，asset为资产对象(注意: 因为资产可能变化频繁，所以一般10秒钟推送一次更新回调)
 async def on_event_asset_update(asset):
     print("asset update:", asset)
 
