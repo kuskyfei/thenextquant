@@ -9,8 +9,8 @@
 - Fix bug: update order remain quantity when status is CANCELED.
 - Add volume field in kline data when save to db.
 - Add routing_key for EventHeartbeat.
-- Change Trade module's locker name to aviod there was the same locker in one progress.
-- change AMQP login method to PLAIN.
+- Change Trade module's locker name to avoid that there was the same locker in one progress.
+- Change AMQP login method to PLAIN.
 
 
 ### v0.1.9
