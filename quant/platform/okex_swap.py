@@ -246,10 +246,19 @@ class OKExSwapTrade(Websocket):
         strategy: What's name would you want to created for you strategy.
         symbol: Symbol name for your trade.
         host: HTTP request host. (default "https://www.okex.com")
-        wss: Websocket address. (default "wss://real.okex.com:10442")
+        wss: Websocket address. (default "wss://real.okex.com:8443")
         access_key: Account's ACCESS KEY.
         secret_key Account's SECRET KEY.
         passphrase API KEY Passphrase.
+        asset_update_callback: You can use this param to specific a async callback function when you initializing Trade
+            object. `asset_update_callback` is like `async def on_asset_update_callback(asset: Asset): pass` and this
+            callback function will be executed asynchronous when received AssetEvent.
+        order_update_callback: You can use this param to specific a async callback function when you initializing Trade
+            object. `order_update_callback` is like `async def on_order_update_callback(order: Order): pass` and this
+            callback function will be executed asynchronous when some order state updated.
+        position_update_callback: You can use this param to specific a async callback function when you initializing Trade
+            object. `position_update_callback` is like `async def on_position_update_callback(order: Position): pass` and
+            this callback function will be executed asynchronous when some position state updated.
         init_success_callback: You can use this param to specific a async callback function when you initializing Trade
             object. `init_success_callback` is like `async def on_init_success_callback(success: bool, error: Error): pass`
             and this callback function will be executed asynchronous after Trade module object initialized successfully.
@@ -267,7 +276,7 @@ class OKExSwapTrade(Websocket):
         if not kwargs.get("host"):
             kwargs["host"] = "https://www.okex.com"
         if not kwargs.get("wss"):
-            kwargs["wss"] = "wss://real.okex.com:10442"
+            kwargs["wss"] = "wss://real.okex.com:8443"
         if not kwargs.get("access_key"):
             e = Error("param access_key miss")
         if not kwargs.get("secret_key"):
@@ -300,7 +309,7 @@ class OKExSwapTrade(Websocket):
 
         self._assets = {}  # Asset object. e.g. {"BTC": {"free": "1.1", "locked": "2.2", "total": "3.3"}, ... }
         self._orders = {}  # Order objects. e.g. {"order_no": Order, ... }
-        self._position = Position(self._platform, self._account, self._strategy, self._symbol)  # 仓位
+        self._position = Position(self._platform, self._account, self._strategy, self._symbol)
 
         # Subscribing our channels.
         self._order_channel = "swap/order:{symbol}".format(symbol=self._symbol)
@@ -336,8 +345,7 @@ class OKExSwapTrade(Websocket):
         return self._rest_api
 
     async def connected_callback(self):
-        """ After websocket connection created successfully, we will send a message to server for authentication.
-        """
+        """After websocket connection created successfully, we will send a message to server for authentication."""
         timestamp = str(time.time()).split(".")[0] + "." + str(time.time()).split(".")[1][:3]
         message = str(timestamp) + "GET" + "/users/self/verify"
         mac = hmac.new(bytes(self._secret_key, encoding="utf8"), bytes(message, encoding="utf8"), digestmod="sha256")
@@ -351,10 +359,10 @@ class OKExSwapTrade(Websocket):
 
     @async_method_locker("OKExSwapTrade.process_binary.locker")
     async def process_binary(self, raw):
-        """ Process binary message that receive from websocket.
+        """ Process binary message that received from websocket.
 
         Args:
-            raw Binary message receive from websocket.
+            raw: Binary message received from websocket.
 
         Returns:
             None.
@@ -376,8 +384,7 @@ class OKExSwapTrade(Websocket):
             if not msg.get("success"):
                 e = Error("Websocket connection authorized failed: {}".format(msg))
                 logger.error(e, caller=self)
-                if self._init_success_callback:
-                    SingleTask.run(self._init_success_callback, False, e)
+                SingleTask.run(self._init_success_callback, False, e)
                 return
             logger.info("Websocket connection authorized successfully.", caller=self)
 
@@ -385,24 +392,18 @@ class OKExSwapTrade(Websocket):
             result, error = await self._rest_api.get_order_list(self._symbol, 6)
             if error:
                 e = Error("get open orders error: {}".format(error))
-                if self._init_success_callback:
-                    SingleTask.run(self._init_success_callback, False, e)
+                SingleTask.run(self._init_success_callback, False, e)
                 return
             for order_info in result["order_info"]:
-                order = self._update_order(order_info)
-                if self._order_update_callback:
-                    SingleTask.run(self._order_update_callback, copy.copy(order))
+                self._update_order(order_info)
 
             # Fetch positions from server.
             position, error = await self._rest_api.get_position(self._symbol)
             if error:
                 e = Error("get position error: {}".format(error))
-                if self._init_success_callback:
-                    SingleTask.run(self._init_success_callback, False, e)
+                SingleTask.run(self._init_success_callback, False, e)
                 return
             self._update_position(position)
-            if self._position_update_callback:
-                SingleTask.run(self._position_update_callback, copy.copy(self.position))
 
             # Subscribe order channel and position channel.
             data = {
@@ -419,24 +420,19 @@ class OKExSwapTrade(Websocket):
             if msg.get("channel") == self._position_channel:
                 self._subscribe_position_ok = True
             if self._subscribe_order_ok and self._subscribe_position_ok:
-                if self._init_success_callback:
-                    SingleTask.run(self._init_success_callback, True, None)
+                SingleTask.run(self._init_success_callback, True, None)
             return
 
         # Order update message received.
         if msg.get("table") == "swap/order":
             for data in msg["data"]:
-                order = self._update_order(data)
-                if order and self._order_update_callback:
-                    SingleTask.run(self._order_update_callback, copy.copy(order))
+                self._update_order(data)
             return
 
         # Position update message receive.
         if msg.get("table") == "swap/position":
             for data in msg["data"]:
                 self._update_position(data)
-                if self._position_update_callback:
-                    SingleTask.run(self._position_update_callback, copy.copy(self.position))
 
     async def create_order(self, action, price, quantity, order_type=ORDER_TYPE_LIMIT, match_price=0, **kwargs):
         """ Create an order.
@@ -586,9 +582,11 @@ class OKExSwapTrade(Websocket):
         order.ctime = ctime
         order.utime = ctime
         self._orders[order_no] = order
-        if state in ["-1", "2"]:
+
+        SingleTask.run(self._order_update_callback, copy.copy(order))
+
+        if status in [ORDER_STATUS_FAILED, ORDER_STATUS_CANCELED, ORDER_STATUS_FILLED]:
             self._orders.pop(order_no)
-        return order
 
     def _update_position(self, position_info):
         """ Position update.
@@ -613,6 +611,7 @@ class OKExSwapTrade(Websocket):
             else:
                 continue
             self._position.utime = tools.utctime_str_to_mts(item["timestamp"])
+        SingleTask.run(self._position_update_callback, copy.copy(self.position))
 
     async def on_event_asset_update(self, asset: Asset):
         """ Asset event data callback.
