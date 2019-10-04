@@ -139,6 +139,8 @@ class OKExSwapRestAPI:
             error: Error information, otherwise it's None.
         """
         assert isinstance(order_ids, list)
+        if len(order_ids) > 10:
+            logger.warn("order id list too long! no more than 10!", caller=self)
         uri = "/api/swap/v3/cancel_batch_orders/{instrument_id}".format(instrument_id=instrument_id)
         body = {
             "ids": order_ids
@@ -394,6 +396,8 @@ class OKExSwapTrade(Websocket):
                 e = Error("get open orders error: {}".format(error))
                 SingleTask.run(self._init_success_callback, False, e)
                 return
+            if len(result) > 100:
+                logger.warn("order length too long! (more than 100)", caller=self)
             for order_info in result["order_info"]:
                 self._update_order(order_info)
 
@@ -434,14 +438,14 @@ class OKExSwapTrade(Websocket):
             for data in msg["data"]:
                 self._update_position(data)
 
-    async def create_order(self, action, price, quantity, order_type=ORDER_TYPE_LIMIT, match_price=0, **kwargs):
+    async def create_order(self, action, price, quantity, order_type=ORDER_TYPE_LIMIT, match_price=0, *args, **kwargs):
         """ Create an order.
 
         Args:
-            action: Trade direction, BUY or SELL.
+            action: Trade direction, `BUY` or `SELL`.
             price: Price of each contract.
             quantity: The buying or selling quantity.
-            order_type:
+            order_type: Order type, `MARKET` or `LIMIT`.
             match_price: Order at best counter party price? (0: no, 1: yes), When posting orders at best bid price,
                             order_type can only be 0 (regular order).
             order_type: Fill in number for parameter, 0: Normal limit order (Unfilled and 0 represent normal limit
@@ -491,6 +495,8 @@ class OKExSwapTrade(Websocket):
             result, error = await self._rest_api.get_order_list(self._symbol, 6)
             if error:
                 return False, error
+            if len(result) > 100:
+                logger.warn("order length too long! (more than 100)", caller=self)
             for order_info in result["order_info"]:
                 order_no = order_info["order_id"]
                 _, error = await self._rest_api.revoke_order(self._symbol, order_no)
@@ -531,6 +537,8 @@ class OKExSwapTrade(Websocket):
         if error:
             return None, error
         else:
+            if len(success) > 100:
+                logger.warn("order length too long! (more than 100)", caller=self)
             order_nos = []
             for order_info in success["order_info"]:
                 order_nos.append(order_info["order_id"])
@@ -543,7 +551,7 @@ class OKExSwapTrade(Websocket):
             order_info: Order information.
 
         Returns:
-            Return order object if or None.
+            None.
         """
         order_no = str(order_info["order_id"])
         state = order_info["state"]

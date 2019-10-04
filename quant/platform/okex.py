@@ -6,6 +6,7 @@ https://www.okex.me/docs/zh/
 
 Author: HuangTao
 Date:   2019/01/19
+Email:  huangtao@ifclover.com
 """
 
 import time
@@ -473,6 +474,8 @@ class OKExTrade(Websocket):
         if error:
             return None, error
         else:
+            if len(success) > 100:
+                logger.warn("order length too long! (more than 100)", caller=self)
             order_nos = []
             for order_info in success:
                 order_nos.append(order_info["order_id"])
@@ -485,7 +488,7 @@ class OKExTrade(Websocket):
             order_info: Order information.
 
         Returns:
-            Return order object if or None.
+            None.
         """
         order_no = str(order_info["order_id"])
         state = order_info["state"]
