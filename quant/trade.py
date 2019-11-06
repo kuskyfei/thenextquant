@@ -100,6 +100,8 @@ class Trade:
             from quant.platform.kucoin import KucoinTrade as T
         elif platform == const.HUOBI_FUTURE:
             from quant.platform.huobi_future import HuobiFutureTrade as T
+        elif platform == const.DIGIFINEX:
+            from quant.platform.digifinex import DigifinexTrade as T
         else:
             logger.error("platform error:", platform, caller=self)
             e = Error("platform error")
