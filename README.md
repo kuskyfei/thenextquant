@@ -112,5 +112,7 @@ python src/main.py config.json
 
 ### 有任何问题，欢迎联系
 
-- 微信二维码  
-![](docs/images/wx_qrcode.png)
+- 微信二维码
+<p>
+  <img src ="http://open-space.ifclover.com/wx_qrcode.jpeg" align="middle" width="250" height="250"/>
+</p>
