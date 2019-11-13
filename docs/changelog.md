@@ -1,6 +1,15 @@
 # Change Logs
 
 
+### v0.2.2
+
+*Date: 2019/10/09*  
+*Summary:*
+- Add [Digifinex](../example/digifinex) Trade module.
+- Add `*args` `**kwargs` params for `create_order` function.
+- Add `client_order_id` for `Binance` & `OKEx`.
+
+
 ### v0.2.1
 
 *Date: 2019/10/09*  

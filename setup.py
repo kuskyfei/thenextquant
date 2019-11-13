@@ -5,7 +5,7 @@ from distutils.core import setup
 
 setup(
     name="thenextquant",
-    version="0.2.1",
+    version="0.2.2",
     packages=[
         "quant",
         "quant.utils",
@@ -18,7 +18,7 @@ setup(
     license="MIT",
     keywords=[
         "thenextquant", "quant", "framework", "async", "asynchronous", "digiccy", "digital", "currency",
-        "marketmaker", "binance", "okex", "huobi", "bitmex", "deribit", "kraken", "gemini", "kucoin"
+        "marketmaker", "binance", "okex", "huobi", "bitmex", "deribit", "kraken", "gemini", "kucoin", "digifinex"
     ],
     install_requires=[
         "aiohttp==3.2.1",
