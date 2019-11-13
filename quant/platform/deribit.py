@@ -178,7 +178,7 @@ class DeribitTrade(Websocket):
         success, error = await self._send_message(method, params)
         return success, error
 
-    async def create_order(self, action, price, quantity, order_type=ORDER_TYPE_LIMIT):
+    async def create_order(self, action, price, quantity, order_type=ORDER_TYPE_LIMIT, *args, **kwargs):
         """ 创建订单
         @param action 委托方向 BUY SELL
         @param price 委托价格

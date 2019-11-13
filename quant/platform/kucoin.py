@@ -399,7 +399,7 @@ class KucoinTrade:
         if self._init_success_callback:
             SingleTask.run(self._init_success_callback, True, None)
 
-    async def create_order(self, action, price, quantity, order_type=ORDER_TYPE_LIMIT, **kwargs):
+    async def create_order(self, action, price, quantity, order_type=ORDER_TYPE_LIMIT, *args, **kwargs):
         """ Create an order.
 
         Args:

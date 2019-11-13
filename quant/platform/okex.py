@@ -391,7 +391,7 @@ class OKExTrade(Websocket):
                 data["utime"] = data["last_fill_time"]
                 self._update_order(data)
 
-    async def create_order(self, action, price, quantity, order_type=ORDER_TYPE_LIMIT):
+    async def create_order(self, action, price, quantity, order_type=ORDER_TYPE_LIMIT, *args, **kwargs):
         """ Create an order.
 
         Args:

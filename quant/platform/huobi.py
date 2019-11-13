@@ -367,7 +367,7 @@ class HuobiTrade(Websocket):
             data["utime"] = msg["ts"]
             self._update_order(data)
 
-    async def create_order(self, action, price, quantity, order_type=ORDER_TYPE_LIMIT):
+    async def create_order(self, action, price, quantity, order_type=ORDER_TYPE_LIMIT, *args, **kwargs):
         """ 创建订单
         @param action 交易方向 BUY / SELL
         @param price 委托价格

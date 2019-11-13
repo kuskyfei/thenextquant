@@ -431,7 +431,7 @@ class OKExFutureTrade(Websocket):
             for data in msg["data"]:
                 self._update_position(data)
 
-    async def create_order(self, action, price, quantity, order_type=ORDER_TYPE_LIMIT, *args, **kwargs):
+    async def create_order(self, action, price, quantity, *args, **kwargs):
         """ Create an order.
 
         Args:

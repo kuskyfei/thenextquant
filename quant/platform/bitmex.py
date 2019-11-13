@@ -284,7 +284,7 @@ class BitmexTrade(Websocket):
                 if self._position_update_callback:
                     SingleTask.run(self._position_update_callback, copy.copy(self.position))
 
-    async def create_order(self, action, price, quantity, order_type=ORDER_TYPE_LIMIT):
+    async def create_order(self, action, price, quantity, order_type=ORDER_TYPE_LIMIT, *args, **kwargs):
         """ 创建订单
         @param action 委托方向 BUY SELL
         @param price 委托价格

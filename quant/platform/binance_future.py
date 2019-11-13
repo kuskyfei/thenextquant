@@ -545,14 +545,13 @@ class BinanceFutureTrade:
         self._ok = True
         SingleTask.run(self._init_success_callback, True, None)
 
-    async def create_order(self, action, price, quantity, order_type=ORDER_TYPE_LIMIT):
+    async def create_order(self, action, price, quantity, *args, **kwargs):
         """ Create an order.
 
         Args:
             action: Trade direction, BUY or SELL.
             price: Price of each contract.
             quantity: The buying or selling quantity.
-            order_type: Limit order or market order, LIMIT or MARKET.
 
         Returns:
             order_no: Order ID if created successfully, otherwise it's None.
