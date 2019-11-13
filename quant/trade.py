@@ -127,7 +127,7 @@ class Trade:
     def rest_api(self):
         return self._t.rest_api
 
-    async def create_order(self, action, price, quantity, order_type=ORDER_TYPE_LIMIT, **kwargs):
+    async def create_order(self, action, price, quantity, order_type=ORDER_TYPE_LIMIT, *args, **kwargs):
         """ Create an order.
 
         Args:
