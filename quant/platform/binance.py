@@ -116,13 +116,14 @@ class BinanceRestAPI:
         success, error = await self.request("GET", "/api/v1/depth", params=params)
         return success, error
 
-    async def create_order(self, action, symbol, price, quantity):
+    async def create_order(self, action, symbol, price, quantity, client_order_id=None):
         """ Create an order.
         Args:
             action: Trade direction, BUY or SELL.
             symbol: Symbol name, e.g. BTCUSDT.
             price: Price of each contract.
             quantity: The buying or selling quantity.
+            client_order_id: Client order id.
 
         Returns:
             success: Success results, otherwise it's None.
@@ -139,6 +140,8 @@ class BinanceRestAPI:
             "newOrderRespType": "FULL",
             "timestamp": tools.get_cur_timestamp_ms()
         }
+        if client_order_id:
+            info["newClientOrderId"] = client_order_id
         success, error = await self.request("POST", "/api/v3/order", body=info, auth=True)
         return success, error
 
@@ -476,7 +479,9 @@ class BinanceTrade(Websocket):
         """
         price = tools.float_to_str(price)
         quantity = tools.float_to_str(quantity)
-        result, error = await self._rest_api.create_order(action, self._raw_symbol, price, quantity)
+        client_order_id = kwargs.get("client_order_id")
+        result, error = await self._rest_api.create_order(action, self._raw_symbol, price, quantity,
+                                                          client_order_id=client_order_id)
         if error:
             return None, error
         order_no = "{}_{}".format(result["orderId"], result["clientOrderId"])
@@ -574,6 +579,7 @@ class BinanceTrade(Websocket):
                     "account": self._account,
                     "strategy": self._strategy,
                     "order_no": order_no,
+                    "client_order_id": msg["c"],
                     "action": msg["S"],
                     "order_type": msg["o"],
                     "symbol": self._symbol,

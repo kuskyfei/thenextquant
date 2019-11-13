@@ -135,7 +135,7 @@ class OKExMarginRestAPI:
         success, error = await self.request("POST", uri, body=body, auth=True)
         return success, error
 
-    async def create_order(self, action, instrument_id, price, quantity, order_type=ORDER_TYPE_LIMIT):
+    async def create_order(self, action, instrument_id, price, quantity, order_type=ORDER_TYPE_LIMIT, client_oid=None):
         """ Create an order.
         Args:
             action: Action type, `BUY` or `SELL`.
@@ -143,6 +143,7 @@ class OKExMarginRestAPI:
             price: Order price.
             quantity: Order quantity.
             order_type: Order type, `MARKET` or `LIMIT`.
+            client_oid: Client order id.
 
         Returns:
             success: Success results, otherwise it's None.
@@ -167,6 +168,8 @@ class OKExMarginRestAPI:
         else:
             logger.error("order_type error! order_type:", order_type, caller=self)
             return None
+        if client_oid:
+            info["client_oid"] = client_oid
         success, error = await self.request("POST", uri, body=info, auth=True)
         return success, error
 
@@ -496,7 +499,9 @@ class OKExMarginTrade(Websocket):
         """
         price = tools.float_to_str(price)
         quantity = tools.float_to_str(quantity)
-        result, error = await self._rest_api.create_order(action, self._raw_symbol, price, quantity, order_type)
+        client_order_id = kwargs.get("client_order_id")
+        result, error = await self._rest_api.create_order(action, self._raw_symbol, price, quantity, order_type,
+                                                          client_oid=client_order_id)
         if error:
             return None, error
         if not result["result"]:
@@ -611,6 +616,7 @@ class OKExMarginTrade(Websocket):
                 "account": self._account,
                 "strategy": self._strategy,
                 "order_no": order_no,
+                "client_order_id": order_info["client_oid"],
                 "action": ORDER_ACTION_BUY if order_info["side"] == "buy" else ORDER_ACTION_SELL,
                 "symbol": self._symbol,
                 "price": order_info["price"],

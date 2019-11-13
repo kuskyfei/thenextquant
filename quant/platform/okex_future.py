@@ -79,7 +79,7 @@ class OKExFutureRestAPI:
         success, error = await self.request("GET", uri, auth=True)
         return success, error
 
-    async def create_order(self, instrument_id, trade_type, price, size, match_price=0, leverage=20):
+    async def create_order(self, instrument_id, trade_type, price, size, match_price=0, leverage=20, client_oid=None):
         """ Create an order.
         Args:
             instrument_id: Contract ID, e.g. BTC-USD-180213.
@@ -89,6 +89,7 @@ class OKExFutureRestAPI:
             match_price: Order at best counter party price? (0: no, 1: yes), When posting orders at best bid price,
                             order_type can only be 0 (regular order).
             leverage: The leverage of order, default is 20.
+            client_oid: Client order id.
 
         Returns:
             success: Success results, otherwise it's None.
@@ -103,6 +104,8 @@ class OKExFutureRestAPI:
             "match_price": match_price,
             "leverage": leverage
         }
+        if client_oid:
+            body["client_oid"] = client_oid
         success, error = await self.request("POST", uri, body=body, auth=True)
         return success, error
 
@@ -455,7 +458,9 @@ class OKExFutureTrade(Websocket):
             else:
                 trade_type = "2"
         quantity = abs(int(quantity))
-        result, error = await self._rest_api.create_order(self._symbol, trade_type, price, quantity)
+        client_order_id = kwargs.get("client_order_id")
+        result, error = await self._rest_api.create_order(self._symbol, trade_type, price, quantity,
+                                                          client_oid=client_order_id)
         if error:
             return None, error
         return result["order_id"], None
@@ -561,6 +566,7 @@ class OKExFutureTrade(Websocket):
                 "account": self._account,
                 "strategy": self._strategy,
                 "order_no": order_no,
+                "client_order_id": order_info["client_oid"],
                 "action": ORDER_ACTION_BUY if order_info["type"] in ["1", "4"] else ORDER_ACTION_SELL,
                 "symbol": self._symbol,
                 "price": order_info["price"],

@@ -11,6 +11,7 @@ Email:  huangtao@ifclover.com
 import copy
 
 from quant import const
+from quant.utils import tools
 from quant.error import Error
 from quant.utils import logger
 from quant.tasks import SingleTask
@@ -139,6 +140,8 @@ class Trade:
             order_no: Order ID if created successfully, otherwise it's None.
             error: Error information, otherwise it's None.
         """
+        if not kwargs.get("client_order_id"):
+            kwargs["client_order_id"] = tools.get_uuid1().replace("-", "")
         order_no, error = await self._t.create_order(action, price, quantity, order_type, **kwargs)
         return order_no, error
 
@@ -176,24 +179,6 @@ class Trade:
         Args:
             order: Order object.
         """
-        o = {
-            "platform": order.platform,
-            "account": order.account,
-            "strategy": order.strategy,
-            "order_no": order.order_no,
-            "action": order.action,
-            "order_type": order.order_type,
-            "symbol": order.symbol,
-            "price": order.price,
-            "quantity": order.quantity,
-            "remain": order.remain,
-            "status": order.status,
-            "avg_price": order.avg_price,
-            "trade_type": order.trade_type,
-            "ctime": order.ctime,
-            "utime": order.utime
-        }
-        EventOrder(**o).publish()
         if self._order_update_callback:
             SingleTask.run(self._order_update_callback, order)
 

@@ -56,13 +56,14 @@ class Order:
         utime: Order update time, millisecond.
     """
 
-    def __init__(self, account=None, platform=None, strategy=None, order_no=None, symbol=None, action=None, price=0,
-                 quantity=0, remain=0, status=ORDER_STATUS_NONE, avg_price=0, order_type=ORDER_TYPE_LIMIT,
-                 trade_type=TRADE_TYPE_NONE, ctime=None, utime=None):
+    def __init__(self, account=None, platform=None, strategy=None, order_no=None, client_order_id=None, symbol=None,
+                 action=None, price=0, quantity=0, remain=0, status=ORDER_STATUS_NONE, avg_price=0,
+                 order_type=ORDER_TYPE_LIMIT, trade_type=TRADE_TYPE_NONE, ctime=None, utime=None):
         self.platform = platform
         self.account = account
         self.strategy = strategy
         self.order_no = order_no
+        self.client_order_id = client_order_id
         self.action = action
         self.order_type = order_type
         self.symbol = symbol
@@ -77,13 +78,14 @@ class Order:
 
     def __str__(self):
         info = "[platform: {platform}, account: {account}, strategy: {strategy}, order_no: {order_no}, " \
-               "action: {action}, symbol: {symbol}, price: {price}, quantity: {quantity}, remain: {remain}, " \
-               "status: {status}, avg_price: {avg_price}, order_type: {order_type}, trade_type: {trade_type}, " \
+               "client_order_id: {client_order_id}, action: {action}, symbol: {symbol}, price: {price}, " \
+               "quantity: {quantity}, remain: {remain}, status: {status}, avg_price: {avg_price}, " \
+               "order_type: {order_type}, trade_type: {trade_type}, " \
                "ctime: {ctime}, utime: {utime}]".format(
             platform=self.platform, account=self.account, strategy=self.strategy, order_no=self.order_no,
-            action=self.action, symbol=self.symbol, price=self.price, quantity=self.quantity,
-            remain=self.remain, status=self.status, avg_price=self.avg_price, order_type=self.order_type,
-            trade_type=self.trade_type, ctime=self.ctime, utime=self.utime)
+            client_order_id=self.client_order_id, action=self.action, symbol=self.symbol, price=self.price,
+            quantity=self.quantity, remain=self.remain, status=self.status, avg_price=self.avg_price,
+            order_type=self.order_type, trade_type=self.trade_type, ctime=self.ctime, utime=self.utime)
         return info
 
     def __repr__(self):
