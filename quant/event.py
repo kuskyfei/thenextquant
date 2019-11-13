@@ -20,9 +20,10 @@ from quant.config import config
 from quant.tasks import LoopRunTask, SingleTask
 from quant.utils.decorator import async_method_locker
 from quant.market import Orderbook, Trade, Kline
+from quant.asset import Asset
 
 
-__all__ = ("EventCenter", "EventKline", "EventOrderbook", "EventTrade")
+__all__ = ("EventCenter", "EventKline", "EventOrderbook", "EventTrade", "EventAsset")
 
 
 class Event:
@@ -253,6 +254,43 @@ class EventTrade(Event):
     def parse(self):
         trade = Trade(**self.data)
         return trade
+
+
+class EventAsset(Event):
+    """ Asset event.
+
+    Attributes:
+        platform: Exchange platform name, e.g. bitmex.
+        account: Trading account name, e.g. test@gmail.com.
+        assets: Asset details.
+        timestamp: Publish time, millisecond.
+        update: If any update in this publish.
+
+    * NOTE:
+        Publisher: Asset server.
+        Subscriber: Any servers.
+    """
+
+    def __init__(self, platform=None, account=None, assets=None, timestamp=None, update=False):
+        """Initialize."""
+        name = "EVENT_ASSET"
+        exchange = "Asset"
+        routing_key = "{platform}.{account}".format(platform=platform, account=account)
+        queue = "{server_id}.{exchange}.{routing_key}".format(server_id=config.server_id,
+                                                              exchange=exchange,
+                                                              routing_key=routing_key)
+        data = {
+            "platform": platform,
+            "account": account,
+            "assets": assets,
+            "timestamp": timestamp,
+            "update": update
+        }
+        super(EventAsset, self).__init__(name, exchange, queue, routing_key, data=data)
+
+    def parse(self):
+        asset = Asset(**self.data)
+        return asset
 
 
 class EventCenter:
