@@ -18,7 +18,6 @@ from quant.tasks import SingleTask
 from quant.order import ORDER_TYPE_LIMIT
 from quant.order import Order
 from quant.position import Position
-from quant.event import EventOrder
 
 
 class Trade:

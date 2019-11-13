@@ -24,7 +24,6 @@ class HeartBeat(object):
         self._count = 0  # 心跳次数
         self._interval = 1  # 服务心跳执行时间间隔(秒)
         self._print_interval = config.heartbeat.get("interval", 0)  # 心跳打印时间间隔(秒)，0为不打印
-        self._broadcast_interval = config.heartbeat.get("broadcast", 0)  # 心跳广播间隔(秒)，0为不广播
         self._tasks = {}  # 跟随心跳执行的回调任务列表，由 self.register 注册 {task_id: {...}}
 
     @property
@@ -56,11 +55,6 @@ class HeartBeat(object):
             kwargs["heart_beat_count"] = self._count
             asyncio.get_event_loop().create_task(func(*args, **kwargs))
 
-        # 广播服务进程心跳
-        if self._broadcast_interval > 0:
-            if self._count % self._broadcast_interval == 0:
-                self.alive()
-
     def register(self, func, interval=1, *args, **kwargs):
         """ 注册一个任务，在每次心跳的时候执行调用
         @param func 心跳的时候执行的函数
@@ -83,12 +77,6 @@ class HeartBeat(object):
         """
         if task_id in self._tasks:
             self._tasks.pop(task_id)
-
-    def alive(self):
-        """ 服务进程广播心跳
-        """
-        from quant.event import EventHeartbeat
-        EventHeartbeat(config.server_id, self.count).publish()
 
 
 heartbeat = HeartBeat()

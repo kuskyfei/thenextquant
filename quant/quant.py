@@ -32,7 +32,6 @@ class Quant:
         self._get_event_loop()
         self._load_settings(config_module)
         self._init_logger()
-        self._init_db_instance()
         self._init_event_center()
         self._do_heartbeat()
 
@@ -78,19 +77,12 @@ class Quant:
         else:
             logger.initLogger(level, path, name, clear, backup_count)
 
-    def _init_db_instance(self):
-        """Initialize db."""
-        if config.mongodb:
-            from quant.utils.mongo import initMongodb
-            initMongodb(**config.mongodb)
-
     def _init_event_center(self):
         """Initialize event center."""
         if config.rabbitmq:
             from quant.event import EventCenter
             self.event_center = EventCenter()
             self.loop.run_until_complete(self.event_center.connect())
-            config.register_run_time_update()
 
     def _do_heartbeat(self):
         """Start server heartbeat."""

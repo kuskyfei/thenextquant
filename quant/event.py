@@ -20,13 +20,9 @@ from quant.config import config
 from quant.tasks import LoopRunTask, SingleTask
 from quant.utils.decorator import async_method_locker
 from quant.market import Orderbook, Trade, Kline
-from quant.asset import Asset
-from quant.order import Order
-from quant.position import Position
 
 
-__all__ = ("EventCenter", "EventConfig", "EventHeartbeat", "EventAsset", "EventOrder", "EventKline", "EventOrderbook",
-           "EventTrade")
+__all__ = ("EventCenter", "EventKline", "EventOrderbook", "EventTrade")
 
 
 class Event:
@@ -124,159 +120,6 @@ class Event:
 
     def __repr__(self):
         return str(self)
-
-
-class EventConfig(Event):
-    """ Config event.
-
-    Attributes:
-        server_id: Server id.
-        params: Config params.
-
-    * NOTE:
-        Publisher: Manager Server.
-        Subscriber: Any Servers who need.
-    """
-
-    def __init__(self, server_id=None, params=None):
-        """Initialize."""
-        name = "EVENT_CONFIG"
-        exchange = "Config"
-        queue = "{server_id}.{exchange}".format(server_id=server_id, exchange=exchange)
-        routing_key = "{server_id}".format(server_id=server_id)
-        data = {
-            "server_id": server_id,
-            "params": params
-        }
-        super(EventConfig, self).__init__(name, exchange, queue, routing_key, data=data)
-
-    def parse(self):
-        return self._data
-
-
-class EventHeartbeat(Event):
-    """ Server Heartbeat event.
-
-    Attributes:
-        server_id: Server id.
-        count: Server heartbeat count.
-
-    * NOTE:
-        Publisher: All servers
-        Subscriber: Monitor server.
-    """
-
-    def __init__(self, server_id=None, count=None):
-        """Initialize."""
-        name = "EVENT_HEARTBEAT"
-        exchange = "Heartbeat"
-        queue = "{server_id}.{exchange}".format(server_id=server_id, exchange=exchange)
-        routing_key = "{server_id}".format(server_id=server_id)
-        data = {
-            "server_id": server_id,
-            "count": count
-        }
-        super(EventHeartbeat, self).__init__(name, exchange, queue, routing_key, data=data)
-
-    def parse(self):
-        return self._data
-
-
-class EventAsset(Event):
-    """ Asset event.
-
-    Attributes:
-        platform: Exchange platform name, e.g. bitmex.
-        account: Trading account name, e.g. test@gmail.com.
-        assets: Asset details.
-        timestamp: Publish time, millisecond.
-        update: If any update in this publish.
-
-    * NOTE:
-        Publisher: Asset server.
-        Subscriber: Any servers.
-    """
-
-    def __init__(self, platform=None, account=None, assets=None, timestamp=None, update=False):
-        """Initialize."""
-        name = "EVENT_ASSET"
-        exchange = "Asset"
-        routing_key = "{platform}.{account}".format(platform=platform, account=account)
-        queue = "{server_id}.{exchange}.{routing_key}".format(server_id=config.server_id,
-                                                              exchange=exchange,
-                                                              routing_key=routing_key)
-        data = {
-            "platform": platform,
-            "account": account,
-            "assets": assets,
-            "timestamp": timestamp,
-            "update": update
-        }
-        super(EventAsset, self).__init__(name, exchange, queue, routing_key, data=data)
-
-    def parse(self):
-        asset = Asset(**self.data)
-        return asset
-
-
-class EventOrder(Event):
-    """ Order event.
-
-    Attributes:
-        platform: Exchange platform name, e.g. binance/bitmex.
-        account: Trading account name, e.g. test@gmail.com.
-        strategy: Strategy name, e.g. my_test_strategy.
-        order_no: order id.
-        symbol: Trading pair name, e.g. ETH/BTC.
-        action: Trading side, BUY/SELL.
-        price: Order price.
-        quantity: Order quantity.
-        remain: Remain quantity that not filled.
-        status: Order status.
-        avg_price: Average price that filled.
-        order_type: Order type, only for future order.
-        ctime: Order create time, millisecond.
-        utime: Order update time, millisecond.
-
-    * NOTE:
-        Publisher: Strategy Server.
-        Subscriber: Any Servers who need.
-    """
-
-    def __init__(self, platform=None, account=None, strategy=None, order_no=None, symbol=None, action=None, price=None,
-                 quantity=None, remain=None, status=None, avg_price=None, order_type=None, trade_type=None, ctime=None,
-                 utime=None):
-        """Initialize."""
-        name = "EVENT_ORDER"
-        exchange = "Order"
-        routing_key = "{platform}.{account}.{strategy}".format(platform=platform, account=account, strategy=strategy)
-        queue = "{server_id}.{exchange}.{routing_key}".format(server_id=config.server_id,
-                                                              exchange=exchange,
-                                                              routing_key=routing_key)
-        data = {
-            "platform": platform,
-            "account": account,
-            "strategy": strategy,
-            "order_no": order_no,
-            "action": action,
-            "order_type": order_type,
-            "symbol": symbol,
-            "price": price,
-            "quantity": quantity,
-            "remain": remain,
-            "status": status,
-            "avg_price": avg_price,
-            "trade_type": trade_type,
-            "ctime": ctime,
-            "utime": utime
-        }
-        super(EventOrder, self).__init__(name, exchange, queue, routing_key, data=data)
-
-    def parse(self):
-        """ Parse self._data to Order object.
-        """
-        order = Order(**self.data)
-        return order
 
 
 class EventKline(Event):
@@ -485,8 +328,7 @@ class EventCenter:
         logger.info("Rabbitmq initialize success!", caller=self)
 
         # Create default exchanges.
-        exchanges = ["Orderbook", "Trade", "Kline", "Kline.5min", "Kline.15min", "Config", "Heartbeat", "Asset",
-                     "Order", ]
+        exchanges = ["Orderbook", "Trade", "Kline", "Kline.5min", "Kline.15min", ]
         for name in exchanges:
             await self._channel.exchange_declare(exchange_name=name, type_name="topic")
         logger.debug("create default exchanges success!", caller=self)
